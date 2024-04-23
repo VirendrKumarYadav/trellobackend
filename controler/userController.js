@@ -29,8 +29,9 @@ const userRgistration = async (req, res) => {
             success: true,
             massage: "User Sucessfully Resistered, Let's go to the Login Page!"
         });
+        
     } catch (error) {
-        res.json({
+        res.status(404).json({
             success: false,
             massage: error.message
         });
@@ -42,7 +43,6 @@ const userLogin = async (req, res) => {
     try {
         const username = req.body.email;
         const password = req.body.password;
-        console.log(username, password);
 
         const userDetails = await userModal.findOne({
             $or: [
@@ -62,10 +62,9 @@ const userLogin = async (req, res) => {
             });
         }
 
-        console.log(userDetails);
         //------------------------JWT --------------------------
         if (password === userDetails.password) {
-            const expiryDateTime = Math.floor(new Date().getTime() / 1000) + 7200;
+            const expiryDateTime = Math.floor(new Date().getTime() / 1000) + 7200*24;
             const payload = {
                 id: userDetails._id,
                 name: userDetails.firstname,
@@ -81,7 +80,8 @@ const userLogin = async (req, res) => {
 
             res.json({
                 success: true,
-                massage: "User login Sucessfully!",
+                massage: "User loggedin Sucessfully!",
+                id:userDetails._id,
                 token: barearToken
             });
         }else{
