@@ -29,7 +29,7 @@ if (process.env.SERVER=="LOCAL") {
     });
   } else {
     mongoose.connect(
-      `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@cluster0.3qnwaw3.mongodb.net/`
+      `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@cluster0.3qnwaw3.mongodb.net/Trello`
     )
      .then(() => {
       console.log("REMOTE Database Connected Successully.");
