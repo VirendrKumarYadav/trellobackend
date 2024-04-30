@@ -4,6 +4,7 @@ const dotenv = require("dotenv");
 var cors = require('cors')
 const userRoute = require("./routes/userRoute");
 const listRoute =require("./routes/listRoute")
+const cardRoute =require("./routes/CardRouter")
 const app = express();
 app.use(cors())
 app.options('*', cors())
@@ -42,6 +43,7 @@ if (process.env.SERVER=="LOCAL") {
 app.use(express.json());
 app.use("/api/v1/user/",userRoute);
 app.use("/api/v1/list/",listRoute);
+app.use("/api/v1/card/",cardRoute);
 
 app.listen(process.env.PORT, () => {
   console.log("listening on "+process.env.PORT);

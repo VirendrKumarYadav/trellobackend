@@ -1,37 +1,40 @@
+const CardModal = require("../modal/CardModal")
 const ListModal = require("../modal/ListModal")
 const userModal = require("../modal/userModal")
 const mongoose = require("mongoose");
 
 const createList = async (req, res) => {
     try {
-        const fetchUser = await userModal
-            .find({ _id: req.body.userID })
 
-        const isListExist = await ListModal.findOne({ listname: req.body.listname })
-        if (isListExist) {
+        const fetchUser = await userModal.findOne({ _id: req.body.userID })
+
+        const isListExist = await ListModal.findOne({ _id: req.body.listID })
+        if (!isListExist && !fetchUser) {
             res.status(409).json({
                 success: false,
-                massage: "Listname already Exist, Please enter unique name!"
+                massage: "UserID or List ID does not exist, please enter the correct ID's!"
             })
         }
+
         var currentDate = new Date().toISOString().slice(0, 10);
         var currentTime = new Date().toLocaleTimeString();
 
         if (fetchUser) {
-            const newList = new ListModal({
+            const newCard = new CardModal({
+                _id: new mongoose.Types.ObjectId(),
                 userID: req.body.userID,
-                listname: req.body.listname,
-                cards: [
-                    req.body.card,
-                ],
+                listID: req.body.listID,
+                title: req.body.title,
+                description: req.body.description,
+                status: req.body.status,
                 createdDate: currentDate + " " + currentTime
             })
-            await newList.save();
+            await newCard.save();
 
             res.json({
                 success: true,
-                massage: "list created sucessfully",
-                newList
+                massage: "Crad created sucessfully",
+                newCard
             });
         } else {
             res.status(404).json({
@@ -43,7 +46,7 @@ const createList = async (req, res) => {
     } catch (error) {
         res.status(404).json({
             success: false,
-            massage: error
+            massage: error.stack
         });
     }
 
@@ -52,10 +55,10 @@ const createList = async (req, res) => {
 const getLists = async (req, res) => {
 
     try {
-        const list = await ListModal.find();
+        const cards = await CardModal.find();
         res.json({
             success: true,
-            list
+            cards
         })
     } catch (error) {
         res.status(400).json({
@@ -64,21 +67,35 @@ const getLists = async (req, res) => {
         })
     }
 }
+const getListByd = async (req, res) => {
 
+    try {
+        const cards = await CardModal.findOne({ _id: req.params.id });
+        res.json({
+            success: true,
+            cards
+        })
+    } catch (error) {
+        res.status(400).json({
+            success: false,
+            error
+        })
+    }
+}
 const removeList = async (req, res) => {
     try {
         const listId = req.params.id;
-        const listDetails = await ListModal.findOne({ _id: listId });
+        const listDetails = await CardModal.findOne({ _id: listId });
         if (listDetails) {
             await ListModal.deleteOne({ _id: listId })
             res.json({
                 success: true,
-                massage: "list deleted Sucessfully!"
+                massage: "card deleted Sucessfully!"
             })
         } else {
             res.status(400).json({
                 success: false,
-                massage: "list id is incorrect!"
+                massage: "card id is incorrect!"
             })
         }
 
@@ -94,17 +111,17 @@ const updateList = async (req, res) => {
     try {
         const listId = req.params.id;
 
-        const listDetails = await ListModal.findOne({ _id: listId });
+        const listDetails = await CardModal.findOne({ _id: listId });
         if (listDetails) {
             await ListModal.findByIdAndUpdate({ _id: listId }, req.body)
             res.json({
                 success: true,
-                massage: "list updated Sucessfully!"
+                massage: "Card updated Sucessfully!"
             })
         } else {
             res.status(400).json({
                 success: false,
-                massage: "list id is incorrect!"
+                massage: "Card id is incorrect!"
             })
         }
 
@@ -121,5 +138,6 @@ module.exports = {
     createList,
     getLists,
     removeList,
-    updateList
+    updateList,
+    getListByd
 }

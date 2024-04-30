@@ -9,7 +9,7 @@ router.post("/signup", userControle.userRgistration);
 
 router.post("/login", userControle.userLogin);
 
-router.get("/logout", auth(["admin"]), userControle.userLogout);
+router.get("/logout", userControle.userLogout);
 
 // router.post("/reset-password",userController.resetPassword)
 
@@ -17,7 +17,7 @@ router.get("/logout", auth(["admin"]), userControle.userLogout);
 
 router.get("/", auth(["admin"]), userControle.getUserID)
 
-
+router.get("/auth", userControle.getUserAuth)
 // router.post("/address",authMiddleawire(["admin"]),userController.saveAddress);
 
 module.exports = router;

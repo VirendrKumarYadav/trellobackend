@@ -1,35 +1,33 @@
 const userModal = require("../modal/userModal")
-const bcrypt = require("bcrypt")
+const authSchema = require("../modal/Auth")
+const bcrypt = require("bcrypt");
 const rateLimit = require('express-rate-limit');
 
-const jwt=require("jsonwebtoken")
+const jwt = require("jsonwebtoken")
 
 
 const userRgistration = async (req, res) => {
     const username = req.body.username
     const email = req.body.email
     const pass = req.body.password
-    const encrptrdPass = bcrypt
-        .hash(pass, 10)
-        .then(hash => {
-            userHash = hash
-            console.log('Hash ', hash)
-        })
-        .catch(err => console.error(err.stack))
+    const hashedPassword = await bcrypt.hash(pass, 10);
 
+        
     try {
 
         const newUser = new userModal({
             username: username,
             email: email,
-            password: pass
+            password: hashedPassword,
         })
         await newUser.save();
         res.json({
             success: true,
-            massage: "User Sucessfully Resistered, Let's go to the Login Page!"
+            massage: "User Sucessfully Resistered, Let's go to the Login Page!",
+            
+            
         });
-        
+
     } catch (error) {
         res.status(404).json({
             success: false,
@@ -53,7 +51,7 @@ const userLogin = async (req, res) => {
                 }
             ]
         })
-
+      
         if (!userDetails) {
             res.status(404).json({
                 success: true,
@@ -63,28 +61,53 @@ const userLogin = async (req, res) => {
         }
 
         //------------------------JWT --------------------------
-        if (password === userDetails.password) {
-            const expiryDateTime = Math.floor(new Date().getTime() / 1000) + 7200*24;
+        const passwordMatch = await bcrypt.compare(password, userDetails.password);
+        if (passwordMatch) {
+            const expiryDateTime = Math.floor(new Date().getTime() / 1000) + 7200 * 24;
             const payload = {
                 id: userDetails._id,
-                name: userDetails.firstname,
+                name: userDetails.username,
                 email: userDetails.email,
                 exp: expiryDateTime,
-                role:"admin"
+                role: "admin"
             };
             // to generate toaken add payload and jwt secrate key
             const barearToken = jwt.sign(payload, process.env.JWT_SECRET_KEY)
             // ---------------------------------------------------------------
-            console.log(userDetails);
+            var currentDate = new Date().toISOString().slice(0, 10);
+            var currentTime = new Date().toLocaleTimeString();
+
+            const isLoggedIn = await authSchema.findOne({
+                email: req.body.email,
+            })
+            if (isLoggedIn) {
+                await authSchema.findOneAndUpdate({
+                    email: username,
+                    password: password,
+                    jwtToken: barearToken
+                })
+            } else {
+                const userAuth = new authSchema({
+                    email: username,
+                    password: password,
+                    jwtToken: barearToken,
+                    loggedin:currentDate+" "+currentTime
+                })
+                
+            await userAuth.save();
+            }
 
 
+            // console.log(userAuth);
             res.json({
                 success: true,
                 massage: "User loggedin Sucessfully!",
-                id:userDetails._id,
+                user:userDetails.username,
+                email:userDetails.email,
+                id: userDetails._id,
                 token: barearToken
             });
-        }else{
+        } else {
             res.status(404).json({
                 success: false,
                 massage: "User password is incorrect!",
@@ -103,6 +126,15 @@ const userLogin = async (req, res) => {
 
 const userLogout = async (req, res) => {
     try {
+        const userAuth = await authSchema.findOne({
+            email: req.body.email,
+        })
+        if(userAuth){
+            await authSchema.findOneAndDelete({
+                email: req.body.email,
+            })
+        }
+      
         res.clearCookie("refreshToken");
         res.json({
             success: true,
@@ -141,9 +173,39 @@ const getUserID = async (req, res) => {
         });
     }
 }
+
+const getUserAuth = async (req, res) => {
+
+    try {
+        const userAuth = await authSchema.find()
+   if(userAuth){
+    res.json({
+        success: true,
+        massage: "User auth details.",
+        details: userAuth
+    });
+   }else{
+    res.status(400).json({
+        success: false,
+        massage: "User auth details not present.",
+        details: userAuth.stack
+    });
+   }
+        
+
+    } catch (error) {
+
+        res.json({
+            success: false,
+            massage: "Unable to find the details!"
+        });
+    }
+}
+
 module.exports = {
     userRgistration,
     userLogin,
     userLogout,
-    getUserID
+    getUserID,
+    getUserAuth
 }
