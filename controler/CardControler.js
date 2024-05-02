@@ -51,7 +51,6 @@ const createList = async (req, res) => {
     }
 
 }
-
 const getLists = async (req, res) => {
 
     try {

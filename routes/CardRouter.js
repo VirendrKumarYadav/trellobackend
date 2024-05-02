@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const auth = require("../auth")
-const cardControler=require("../controler/cardControler")
+const cardControler=require("../controler/CardControler")
 
 
 router.post("/create",auth(["admin"]),cardControler.createList);
