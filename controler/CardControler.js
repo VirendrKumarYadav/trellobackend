@@ -3,12 +3,13 @@ const ListModal = require("../modal/ListModal")
 const userModal = require("../modal/userModal")
 const mongoose = require("mongoose");
 
-const createList = async (req, res) => {
+const createCard = async (req, res) => {
     try {
 
         const fetchUser = await userModal.findOne({ _id: req.body.userID })
 
         const isListExist = await ListModal.findOne({ _id: req.body.listID })
+        
         if (!isListExist && !fetchUser) {
             res.status(409).json({
                 success: false,
@@ -29,8 +30,13 @@ const createList = async (req, res) => {
                 status: req.body.status,
                 createdDate: currentDate + " " + currentTime
             })
+            
             await newCard.save();
-
+            // console.log(newCard);
+            const list=await ListModal.findByIdAndUpdate({ _id: req.body.listID }, {
+               cards:[newCard._id]
+            })
+         console.log(list);
             res.json({
                 success: true,
                 massage: "Crad created sucessfully",
@@ -51,7 +57,7 @@ const createList = async (req, res) => {
     }
 
 }
-const getLists = async (req, res) => {
+const getCards = async (req, res) => {
 
     try {
         const cards = await CardModal.find();
@@ -66,7 +72,7 @@ const getLists = async (req, res) => {
         })
     }
 }
-const getListByd = async (req, res) => {
+const getCardById = async (req, res) => {
 
     try {
         const cards = await CardModal.findOne({ _id: req.params.id });
@@ -81,7 +87,7 @@ const getListByd = async (req, res) => {
         })
     }
 }
-const removeList = async (req, res) => {
+const removeCard = async (req, res) => {
     try {
         const listId = req.params.id;
         const listDetails = await CardModal.findOne({ _id: listId });
@@ -106,7 +112,7 @@ const removeList = async (req, res) => {
     }
 }
 
-const updateList = async (req, res) => {
+const updateCard = async (req, res) => {
     try {
         const listId = req.params.id;
 
@@ -134,9 +140,9 @@ const updateList = async (req, res) => {
 }
 
 module.exports = {
-    createList,
-    getLists,
-    removeList,
-    updateList,
-    getListByd
+    createCard,
+    getCards,
+    removeCard,
+    updateCard,
+    getCardById
 }

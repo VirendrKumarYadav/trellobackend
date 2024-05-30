@@ -61,61 +61,61 @@ const userLogin = async (req, res) => {
         //------------------------JWT --------------------------
         var passwordMatch = false;
         bcrypt.compare(password, userDetails.password, function (err, result) {
-            if(result == true) {
-                passwordMatch = true 
-           
-      
-            const expiryDateTime = Math.floor(new Date().getTime() / 1000) + 7200 * 24;
-            const payload = {
-                id: userDetails._id,
-                name: userDetails.username,
-                email: userDetails.email,
-                exp: expiryDateTime,
-                role: "admin"
-            };
-            // to generate toaken add payload and jwt secrate key
-            const barearToken = jwt.sign(payload, process.env.JWT_SECRET_KEY)
-            // ---------------------------------------------------------------
-            var currentDate = new Date().toISOString().slice(0, 10);
-            var currentTime = new Date().toLocaleTimeString();
+            if (result == true) {
+                passwordMatch = true
 
-            const isLoggedIn =  authSchema.findOne({
-                email: req.body.email,
-            })
-            if (isLoggedIn) {
-                 authSchema.findOneAndUpdate({
-                    email: username,
-                    password: password,
-                    jwtToken: barearToken
+
+                const expiryDateTime = Math.floor(new Date().getTime() / 1000) + 7200 * 24;
+                const payload = {
+                    id: userDetails._id,
+                    name: userDetails.username,
+                    email: userDetails.email,
+                    exp: expiryDateTime,
+                    role: "admin"
+                };
+                // to generate toaken add payload and jwt secrate key
+                const barearToken = jwt.sign(payload, process.env.JWT_SECRET_KEY)
+                // ---------------------------------------------------------------
+                var currentDate = new Date().toISOString().slice(0, 10);
+                var currentTime = new Date().toLocaleTimeString();
+
+                const isLoggedIn = authSchema.findOne({
+                    email: req.body.email,
                 })
+                if (isLoggedIn) {
+                    authSchema.findOneAndUpdate({
+                        email: username,
+                        password: password,
+                        jwtToken: barearToken
+                    })
+                } else {
+                    const userAuth = new authSchema({
+                        email: username,
+                        password: password,
+                        jwtToken: barearToken,
+                        loggedin: currentDate + " " + currentTime
+                    })
+
+                    userAuth.save();
+                }
+
+
+                // console.log(userAuth);
+                res.json({
+                    success: true,
+                    massage: "User loggedin Sucessfully!",
+                    user: userDetails.username,
+                    email: userDetails.email,
+                    id: userDetails._id,
+                    token: barearToken
+                });
+
             } else {
-                const userAuth = new authSchema({
-                    email: username,
-                    password: password,
-                    jwtToken: barearToken,
-                    loggedin: currentDate + " " + currentTime
-                })
-
-                 userAuth.save();
+                res.status(404).json({
+                    success: false,
+                    massage: "User password is incorrect!",
+                });
             }
-
-
-            // console.log(userAuth);
-            res.json({
-                success: true,
-                massage: "User loggedin Sucessfully!",
-                user: userDetails.username,
-                email: userDetails.email,
-                id: userDetails._id,
-                token: barearToken
-            });
-
-        } else {
-            res.status(404).json({
-                success: false,
-                massage: "User password is incorrect!",
-            });
-        }
 
         });
 
@@ -206,11 +206,43 @@ const getUserAuth = async (req, res) => {
         });
     }
 }
+const updateUserDetails = async (req, res) => {
+
+    try {
+        const userDetails = await userModal.find({
+            $or: 
+            [
+                {
+                    username: req.body.username
+                }, 
+                {
+                    email: req.body.email
+                } 
+            ]
+        })
+        if(userDetails){
+            
+        }
+        userDetails.update
+        res.json({
+            success: true,
+            massage: "User details",
+            details: userDetails
+
+        });
+    } catch (error) {
+        res.json({
+            success: false,
+            massage: "Unable to find the details!"
+        });
+    }
+}
 
 module.exports = {
     userRgistration,
     userLogin,
     userLogout,
     getUserID,
-    getUserAuth
+    getUserAuth,
+    updateUserDetails
 }

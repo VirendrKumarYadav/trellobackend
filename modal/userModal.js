@@ -1,3 +1,4 @@
+const { Mongoose } = require("mongoose");
 const mongoose = require("mongoose");
 
 
@@ -16,7 +17,11 @@ const userSchema = {
         type: String,
         required: true
     },
-   
+    list:{
+        type:[mongoose.Types.ObjectId],
+        require:false,
+        default:[]
+    }
    
 }
 module.exports = mongoose.model("users", userSchema);
